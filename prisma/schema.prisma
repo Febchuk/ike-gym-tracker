@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(uuid())
+  name              String
+  email             String          @unique
+  passwordHash      String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  workouts          Workout[]
+  measurements      Measurement[]
+}
+
+model Workout {
+  id                String          @id @default(uuid())
+  name              String        
+  date              DateTime
+  notes             String?
+  userId            String
+  user              User            @relation(fields: [userId], references: [id])
+  exercises         Exercise[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Exercise {
+  id                String          @id @default(uuid())
+  name              String          
+  workoutId         String 
+  workout           Workout         @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  sets              Set[]
+  order             Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum SetType {
+  REPS
+  TIME
+  DISTANCE
+}
+
+model Set {
+  id                String          @id @default(uuid())
+  exerciseId        String
+  exercise          Exercise        @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  type              SetType         @default(REPS)
+  weight            Float?
+  reps              Int?
+  duration          Int?
+  distance          Float?
+  isCompleted       Boolean         @default(false)
+  order             Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Measurement {
+  id                String          @id @default(uuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id])
+  date              DateTime
+  weight            Float?
+  bodyFat           Float?
+  chest             Float?
+  waist             Float?
+  hips              Float?
+  biceps            Float?
+  thighs            Float?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model ExerciseLibrary {
+  id                String          @id @default(uuid())
+  name              String          @unique
+  category          String          // e.g. "Chest", "Back", "Legs"
+  defaultSetType    SetType         @default(REPS)
+  description       String?
+  instructions      String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
